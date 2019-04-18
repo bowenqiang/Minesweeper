@@ -9,6 +9,7 @@ type TCell = {
     nearbyMineNum: number,
     isFlipped: boolean;
     isComputed: boolean;
+    isFlagged: boolean;
 }
 
 type TMine = {
@@ -18,7 +19,7 @@ type TMine = {
 
 type TGame = {
     board: TCell[][],
-    mines: TMine[]
+    mines: TMine[],
 }
 
 interface IBoardProps {
@@ -26,6 +27,7 @@ interface IBoardProps {
     width: number,
     mines: number,
     isGameOver: boolean,
+    gameResult: string,
     handleGameResult: Function
 }
 
@@ -33,6 +35,8 @@ interface IBoardState {
     boardData: TGame
 }
 class Board extends Component<IBoardProps, IBoardState> {
+    private _mineIndexs: number[] = [];
+    private _flagIndexs: number[] = [];
     constructor(props: IBoardProps) {
         super(props);
         this.state = {
@@ -49,8 +53,10 @@ class Board extends Component<IBoardProps, IBoardState> {
                     <Cell
                         cellData={cell}
                         isGameOver={this.props.isGameOver}
+                        gameResult={this.props.gameResult}
                         handleGameResult={this.props.handleGameResult}
                         flipCells={this.flipCells}
+                        flagCell={this.flagCell}
                         key={j}
                     ></Cell>
                 );
@@ -68,10 +74,6 @@ class Board extends Component<IBoardProps, IBoardState> {
         );
     }
 
-    componentDidMount(){
-        this.initialBoardData(8,6,10);
-    }
-
     private initialBoardData = (height: number, width: number, mines: number): TGame => {
         let game: TGame = this.createEmptyBoard(height, width);
         this.plantMines(mines, game);
@@ -82,7 +84,7 @@ class Board extends Component<IBoardProps, IBoardState> {
     private createEmptyBoard = (height: number, width: number): TGame => {
         let game: TGame = {
             board: new Array(height),
-            mines: []
+            mines: [],
         };
 
         for(let i = 0; i < height; i++) {
@@ -94,7 +96,8 @@ class Board extends Component<IBoardProps, IBoardState> {
                     isMine: false,
                     nearbyMineNum: 0,
                     isFlipped: false,
-                    isComputed: false
+                    isComputed: false,
+                    isFlagged: false
                 };
             }
             game.board[i] = temp;
@@ -116,8 +119,10 @@ class Board extends Component<IBoardProps, IBoardState> {
                     x: randomX,
                     y: randomY
                 });
+                this._mineIndexs.push(this.props.width * randomX + randomY);
             }        
         }
+        this._mineIndexs.sort();
     }
 
     private calcNearbyMines = (game: TGame): void => {
@@ -194,6 +199,35 @@ class Board extends Component<IBoardProps, IBoardState> {
                 }
             }
         }
+    }
+
+    private flagCell = (x: number, y: number): void => {
+        let newBoardData = Object.assign({}, this.state.boardData);
+        newBoardData.board[x][y].isFlagged = !newBoardData.board[x][y].isFlagged;
+        const index = this.props.width * x + y;
+        if(newBoardData.board[x][y].isFlagged) {
+            this._flagIndexs.push(index);
+            this._flagIndexs.sort();
+        } else {
+            this._flagIndexs = this._flagIndexs.filter((value) => {
+                console.log(index);
+                console.log(value);
+                return value !== index;
+            });
+            this._flagIndexs.sort();
+        }
+        this.setState({
+            boardData: newBoardData
+        });
+
+        if(this.computeResult()) {
+            this.props.handleGameResult(true, 'Won');
+            alert('You Won');
+        }
+    }
+
+    private computeResult = (): boolean => {
+        return JSON.stringify(this._mineIndexs) === JSON.stringify(this._flagIndexs);
     }
 }
 

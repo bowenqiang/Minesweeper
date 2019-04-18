@@ -8,31 +8,27 @@ type TCell = {
     nearbyMineNum: number,
     isFlipped: boolean;
     isComputed: boolean;
+    isFlagged: boolean;
 }
 
 interface ICellProps {
     cellData: TCell,
     isGameOver: boolean,
+    gameResult: string,
     handleGameResult: Function,
-    flipCells: Function
+    flipCells: Function,
+    flagCell: Function
 }
 
-interface ICellState {
-    // isFlipped: boolean
-}
-
-class Cell extends Component<ICellProps, ICellState> {
-    // private _isFlipped = false;
+class Cell extends Component<ICellProps, {}> {
+    private _debug = false;
     constructor(props: ICellProps) {
         super(props);
-        // this.state = {
-        //     isFlipped: false
-        // }
     }
     render(){
-        const cellData = this.props.cellData;
-        const className: string = `cell ${this.props.cellData.isFlipped ? 'show' : 'hidden'}`;
-        const content = this.props.cellData.isFlipped ? (cellData.isMine ? 'mine' : (cellData.nearbyMineNum ? cellData.nearbyMineNum : '')) : ''
+        const cellData: TCell = this.props.cellData;
+        const className: string = `cell ${cellData.isFlipped ? 'show' : 'hidden'} ${this._debug && cellData.isMine ? 'debug-mine' : ''}`;
+        const content = cellData.isFlipped ? (cellData.isMine ? 'mine' : (cellData.nearbyMineNum ? cellData.nearbyMineNum : '')) : cellData.isFlagged ? 'flag' : ''
         return (
             <div className={className}
                 onClick={this.onClick}
@@ -41,22 +37,24 @@ class Cell extends Component<ICellProps, ICellState> {
         );
     }
 
-    onClick = () => {
-        console.log('onclick');
-        if(this.props.isGameOver && false) {
-            alert('Game Over');
+    onClick = (): void => {
+        if(this.props.isGameOver) {
+            this.props.gameResult === 'Lost' ? alert('Game Over') : alert('You Won!');
         } else {
                 if(this.props.cellData.isMine) {
                     this.props.handleGameResult(true, 'Lost');
+                    alert('Game Over')
                 }
                 this.props.flipCells(this.props.cellData.x, this.props.cellData.y);
             }
         } 
 
-
-
-    onContextMenu = (e: any) => {
-        console.log('oncontextmenu');
+    onContextMenu = (e: React.MouseEvent<HTMLDivElement>): void => {
+        if(this.props.isGameOver) {
+            this.props.gameResult === 'Lost' ? alert('Game Over') : alert('You Won!');
+        } else {
+            this.props.flagCell(this.props.cellData.x, this.props.cellData.y);
+        }
         e.preventDefault();
     };
 }

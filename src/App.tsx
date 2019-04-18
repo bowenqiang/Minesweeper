@@ -32,6 +32,7 @@ class App extends Component<{}, IAppState> {
             width={this.state.width}
             mines={this.state.mines}
             isGameOver={this.state.isGameOver}
+            gameResult={this.state.gameResult}
             handleGameResult={this.handleGameResult}
         ></Board>
       </div>
