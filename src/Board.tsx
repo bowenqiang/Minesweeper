@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
 import Cell from './Cell';
+import './Board.scss';
 
 type TCell = {
     x: number,
     y: number,
     isMine: boolean,
     nearbyMineNum: number,
-    isflipped: false;
+    isFlipped: boolean;
+    isComputed: boolean;
 }
 
 type TMine = {
@@ -22,7 +24,9 @@ type TGame = {
 interface IBoardProps {
     height: number,
     width: number,
-    mines: number
+    mines: number,
+    isGameOver: boolean,
+    handleGameResult: Function
 }
 
 interface IBoardState {
@@ -42,11 +46,17 @@ class Board extends Component<IBoardProps, IBoardState> {
         for(let i = 0; i < board.length; i++) {
             const cellRow = board[i].map((cell, j) => {
                 return (
-                    <Cell cellData={cell} key={j}></Cell>
+                    <Cell
+                        cellData={cell}
+                        isGameOver={this.props.isGameOver}
+                        handleGameResult={this.props.handleGameResult}
+                        flipCells={this.flipCells}
+                        key={j}
+                    ></Cell>
                 );
             });
             cells.push((
-                <div key={cells.length}>
+                <div className='cell-row' key={cells.length}>
                     {cellRow}
                 </div>
             ));
@@ -83,7 +93,8 @@ class Board extends Component<IBoardProps, IBoardState> {
                     y: j,
                     isMine: false,
                     nearbyMineNum: 0,
-                    isflipped: false
+                    isFlipped: false,
+                    isComputed: false
                 };
             }
             game.board[i] = temp;
@@ -148,6 +159,41 @@ class Board extends Component<IBoardProps, IBoardState> {
 
     private isValidPosition = (x: number, y: number, boundX: number, boundY: number): boolean => {
         return x >= 0 && x < boundX && y >=0 && y < boundY ? true : false;
+    }
+
+    private flipCells = (x: number, y: number): void => {
+        let newBoardData = Object.assign({}, this.state.boardData);
+        newBoardData.board[x][y].isFlipped = true;
+        this.flipCellsHelper(x, y, newBoardData.board);
+        this.setState({
+            boardData: newBoardData
+        })
+    }
+
+    private flipCellsHelper = (x: number, y: number, board: TCell[][]): void => {
+        const sizeX: number = board.length;
+        const sizeY: number = board[0].length;
+        if(x >= 0 && x < sizeX && y >= 0 && y < sizeY) {
+            if(!board[x][y].isMine) {
+                if(!board[x][y].isComputed) {
+                    if(board[x][y].nearbyMineNum !== 0) {
+                        board[x][y].isFlipped = true;
+                        board[x][y].isComputed = true;
+                    } else {
+                        board[x][y].isFlipped = true;
+                        board[x][y].isComputed = true;
+                        this.flipCellsHelper(x-1,y-1,board);
+                        this.flipCellsHelper(x-1,y,board);
+                        this.flipCellsHelper(x-1,y+1,board);
+                        this.flipCellsHelper(x,y-1,board);
+                        this.flipCellsHelper(x,y+1,board);
+                        this.flipCellsHelper(x+1,y-1,board);
+                        this.flipCellsHelper(x+1,y,board);
+                        this.flipCellsHelper(x+1,y+1,board);
+                    }
+                }
+            }
+        }
     }
 }
 

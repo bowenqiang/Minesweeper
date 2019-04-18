@@ -1,7 +1,24 @@
-.cell {
-    display: inline-block;
-    width: 40px;
+.cell-row {
     height: 40px;
-    border: 1px solid red;
-    margin: 5px 5px 5px 5px;
+    margin-bottom: 10px;
+    width: 418px;
+    margin: 0 auto;
+    margin-bottom: 5px;
+    .cell {
+        width: 40px;
+        height: 40px;
+        margin: 2.5px 2.5px 2.5px 2.5px;
+        float: left;
+        line-height: 40px;
+        border-radius: 2.5px;
+        color: white;
+    }
+
+    .cell.hidden {
+        background-color: black;
+    }
+
+    .cell.show {
+        background-color: gray;
+    }
 }
